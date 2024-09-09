@@ -1,6 +1,7 @@
 import * as dgram from "dgram";
 import DNSHeader, { OpCode, RCode, TDNSHeader } from "./dns/header";
 import DNSQusetion, { IDNSQuestion, QClass, QType } from "./dns/question";
+import DNSAnswer, { IDNSAnswer } from "./dns/answer";
 
 const defaultHeaders: TDNSHeader = {
     id : 1234,
@@ -24,6 +25,14 @@ const defaultQuestion: IDNSQuestion = {
     qclass: QClass.IN,
 }
 
+const defaultAnswer: IDNSAnswer = {
+    name: "codecrafters.io",
+    qtype: QType.A,
+    qclass: QClass.IN,
+    ttl: 60,
+    data: '\x08\x08\x08\x08'
+}
+
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log("Logs from your program will appear here!");
 
@@ -36,10 +45,11 @@ udpSocket.on("message", (data: Buffer, remoteAddr: dgram.RemoteInfo) => {
     try {
         console.log(`Received data from ${remoteAddr.address}:${remoteAddr.port}`);
 
-        const header = DNSHeader.write({...defaultHeaders, qdcount: 1})
+        const header = DNSHeader.write({...defaultHeaders, qdcount: 1, ancount: 1})
         const question = DNSQusetion.write([defaultQuestion])
+        const answer = DNSAnswer.write([defaultAnswer])
 
-        const response = Buffer.concat([header, question]);
+        const response = Buffer.concat([header, question, answer]);
         udpSocket.send(response, remoteAddr.port, remoteAddr.address);
     } catch (e) {
         console.log(`Error sending data: ${e}`);
